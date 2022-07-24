@@ -1,6 +1,6 @@
 # Decision Tree
 
-**Número da Lista**: 3<br>
+**Número da Lista**: 5<br>
 **Conteúdo da Disciplina**: Greed<br>
 
 ## Alunos
