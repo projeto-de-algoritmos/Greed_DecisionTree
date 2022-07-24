@@ -60,83 +60,70 @@ class DecisionTree:
                 max_feature = f
         return max_feature, max_info
 
-    def sub_tree(self, feature, train_data, classes):
-            v_count_dict = train_data[feature].value_counts(sort=False)
-            
-            tree = {}
-            
-            for f_value, count in v_count_dict.iteritems():
-                f_value_data = train_data[train_data[feature] == f_value]
-                
-                node = False
-                for clss in classes:
-                    classes_number = f_value_data[f_value_data[self.label] == clss].shape[0]
-                    
-                    if classes_number == count:
-                        tree[f_value] = clss
-                        train_data = train_data[train_data[feature] != f_value]
-                        node = True
-                        
-                if not node:
-                    tree[f_value] = "?"
-            
-            return tree, train_data
-
-    def tree_maker(self, root, previous_feature_value, train_data, classes):
-        
-        if train_data.shape[0] != 0:
-            max_info = _most_info(self, classes, train_data)
-            tree, train_data = sub_tree(self, max_info, train_data, classes)
-            next_root = None
-            
-        if previous_feature_value != None:
-            root[previous_feature_value] = dict()
-            root[previous_feature_value][max_info] = tree
-            next_root = root[previous_feature_value][max_info]
-        
-        else:
-            root[max_info] = tree
-            next_root = root[max_info]
-            
-        for node, branch in list(next_root.items()):
-            if branch == "?":
-                f_value_data = train_data[train_data[max_info] == node]
-                tree_maker(self, node, previous_feature_value, f_value_data, classes)
-
-    def id3(self, train_data_m):
-        train_data = train_data_m.copy()
-        
+    def _generate_sub_tree(self, feature, classes, train_data):
+        f_value_dict = train_data[feature].value_counts(sort=False)
         tree = {}
-        
-        classes = train_data[self.label].unique()
-        
-        tree_maker(self, tree, None, train_data_m, classes)
-        
+
+        for f, count in f_value_dict.iteritems():
+            f_value_data = train_data[train_data[feature] == f]
+            is_pure_class = False
+
+            for clss in classes:
+                class_numbers = f_value_data[f_value_data[self.label]
+                                             == clss].shape[0]
+                if class_numbers == count:
+                    tree[f] = clss
+                    train_data = train_data[train_data[feature] != f]
+                    is_pure_class = True
+            if not is_pure_class:
+                tree[f] = '.'
         return tree
-    
-    def predictions(tree, instance):
+
+    def _create_tree(self, root, prev_feature, updated_dataset, classes):
+        if updated_dataset.shape[0] != 0:
+            max_feature, _ = self._most_info(classes, updated_dataset)
+            tree = self._generate_sub_tree(
+                max_feature, classes, updated_dataset)
+            next_root = None
+
+            if prev_feature != None:
+                root[prev_feature] = {}
+                root[prev_feature][max_feature] = tree
+                next_root = root[prev_feature][max_feature]
+            else:
+                root[max_feature] = tree
+                next_root = root[max_feature]
+
+            for node, branch in list(next_root.items()):
+                if branch == '.':
+                    f_value_data = updated_dataset[updated_dataset[max_feature] == node]
+                    self._create_tree(next_root, node, f_value_data, classes)
+
+    def id3(self):
+        tree = {}
+        dataset = self.train_data.copy()
+        classes = dataset[self.label].unique()
+        self._create_tree(tree, None, dataset, classes)
+        return tree
+
+    def predict(self, tree, instance):
         if not isinstance(tree, dict):
             return tree
         else:
-            root_node = next(iter(tree))
-            f_value = instance[root_node]
-            if f_value in tree[root_node]:
-                return predictions(tree[root_node], f_value, instance)
+            root = next(iter(tree))
+            f_value = instance[root]
+            if f_value in tree[root]:
+                return self.predict(tree[root][f_value], instance)
             else:
                 return None
-            
-    def evaluate(self, tree, test_data_m):
-        correct_predicition = 0
-        wrong_prediction = 0
-        
-        for index, row in test_data_m.iterrows():
-            result = predictions(tree, test_data_m.iloc[index])
 
-            if result == test_data_m[self.label].iloc[index]:
-                correct_predicition += 1
+    def evaluate(self, tree, test_data):
+        correct = 0
+        wrong = 0
+        for _, row in test_data.iterrows():
+            result = self.predict(tree, row)
+            if result == row[self.label]:
+                correct += 1
             else:
-                wrong_prediction += 1
-                
-        accuracy = correct_predicition / (correct_predicition + wrong_prediction)
-        
-        return accuracy
+                wrong += 1
+        return correct / (correct + wrong)
