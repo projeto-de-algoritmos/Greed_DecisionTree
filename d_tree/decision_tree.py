@@ -58,24 +58,46 @@ class DecisionTree:
                 max_feature = f
         return max_feature, max_info
 
-def sub_tree(feature, train_data, self, classes):
-        v_count_dict = train_data[feature].value_counts(sort=False)
-        
-        tree = {}
-        
-        for f_value, count in v_count_dict.iteritems():
-            f_value_data = train_data[train_data[feature] == f_value]
+    def sub_tree(self, feature, train_data, classes):
+            v_count_dict = train_data[feature].value_counts(sort=False)
             
-            node = False
-            for clss in classes:
-                classes_number = f_value_data[f_value_data[self.label] == clss].shape[0]
+            tree = {}
+            
+            for f_value, count in v_count_dict.iteritems():
+                f_value_data = train_data[train_data[feature] == f_value]
                 
-                if classes_number == count:
-                    tree[f_value] = clss
-                    train_data = train_data[train_data[feature] != f_value]
-                    node = True
+                node = False
+                for clss in classes:
+                    classes_number = f_value_data[f_value_data[self.label] == clss].shape[0]
                     
-            if not node:
-                tree[f_value] = "?"
+                    if classes_number == count:
+                        tree[f_value] = clss
+                        train_data = train_data[train_data[feature] != f_value]
+                        node = True
+                        
+                if not node:
+                    tree[f_value] = "?"
+            
+            return tree, train_data
+
+    def tree_maker(self, root, previous_feature_value, train_data, classes):
         
-        return tree, train_data
+        if train_data.shape[0] != 0:
+            max_info = _most_info(self, classes, train_data)
+            tree, train_data = sub_tree(self, max_info, train_data, classes)
+            next_root = None
+            
+        if previous_feature_value != None:
+            root[previous_feature_value] = dict()
+            root[previous_feature_value][max_info] = tree
+            next_root = root[previous_feature_value][max_info]
+        
+        else:
+            root[max_info] = tree
+            next_root = root[max_info]
+            
+        for node, branch in list(next_root.items()):
+            if branch == "?":
+                f_value_data = train_data[train_data[max_info] == node]
+                tree_maker(self, node, previous_feature_value, f_value_data, classes)
+            
