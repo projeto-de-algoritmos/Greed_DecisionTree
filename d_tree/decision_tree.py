@@ -1,3 +1,4 @@
+import re
 import pandas as pd
 import numpy as np
 
@@ -100,4 +101,26 @@ class DecisionTree:
             if branch == "?":
                 f_value_data = train_data[train_data[max_info] == node]
                 tree_maker(self, node, previous_feature_value, f_value_data, classes)
+
+    def id3(self, train_data_m):
+        train_data = train_data_m.copy()
+        
+        tree = {}
+        
+        classes = train_data[self.label].unique()
+        
+        tree_maker(self, tree, None, train_data_m, classes)
+        
+        return tree
+    
+    def predictions(tree, instance):
+        if not isinstance(tree, dict):
+            return tree
+        else:
+            root_node = next(iter(tree))
+            f_value = instance[root_node]
+            if f_value in tree[root_node]:
+                return predictions(tree[root_node], f_value, instance)
+            else:
+                return None
             
