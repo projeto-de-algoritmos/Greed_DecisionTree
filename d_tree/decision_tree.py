@@ -1,3 +1,4 @@
+from cgi import test
 import re
 import pandas as pd
 import numpy as np
@@ -124,3 +125,18 @@ class DecisionTree:
             else:
                 return None
             
+    def evaluate(self, tree, test_data_m):
+        correct_predicition = 0
+        wrong_prediction = 0
+        
+        for index, row in test_data_m.iterrows():
+            result = predictions(tree, test_data_m.iloc[index])
+
+            if result == test_data_m[self.label].iloc[index]:
+                correct_predicition += 1
+            else:
+                wrong_prediction += 1
+                
+        accuracy = correct_predicition / (correct_predicition + wrong_prediction)
+        
+        return accuracy
