@@ -58,3 +58,24 @@ class DecisionTree:
                 max_feature = f
         return max_feature, max_info
 
+def sub_tree(feature, train_data, self, classes):
+        v_count_dict = train_data[feature].value_counts(sort=False)
+        
+        tree = {}
+        
+        for f_value, count in v_count_dict.iteritems():
+            f_value_data = train_data[train_data[feature] == f_value]
+            
+            node = False
+            for clss in classes:
+                classes_number = f_value_data[f_value_data[self.label] == clss].shape[0]
+                
+                if classes_number == count:
+                    tree[f_value] = clss
+                    train_data = train_data[train_data[feature] != f_value]
+                    node = True
+                    
+            if not node:
+                tree[f_value] = "?"
+        
+        return tree, train_data
