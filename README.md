@@ -9,6 +9,10 @@
 | 17/0013693  |  João Gabriel Rossi |
 | 19/0026600  |  Davi Marinho da Silva Campos |
 
+## Link para a apresentação no YouTube
+
+https://youtu.be/aladk-SZZmA
+
 ## Sobre 
 O projeto tem como foco a implementação de um algoritmo ambicioso utilizado na técnica de classificação conhecida como Decision Tree. O algoritmo é chamado de ID3, uma versão 100% ambiciosa que utiliza do conceito de mínimo local para assumir um valor correto e assim realizar o treinamento e as predições. Foi implementado em python, mas para a sua melhor utilização contém um notebook com todas as células preparadas para realizar o treinamento dos datasets que foram disponibilizados, além da predição.
 
